@@ -22,8 +22,8 @@ class Ball():
         self.byt = 0
 
         self.line_max = 0
-        
         self.angle = 0
+        self.random_angle = False
 
     def init(self):
 
@@ -87,8 +87,9 @@ class Ball():
             else:
                 del self.line_coords[0]
             self.line_coords.append((self.bx, self.by))
-
-        # self.angle = choice(range(360)) * self.conv
+    
+        if self.random_angle:
+            self.angle = choice(range(360)) * self.conv
 
 
 
@@ -128,6 +129,7 @@ class Bounce(QMainWindow):
         # --------------------------------------
         self.draw_balls = True
         self.draw_lines = False
+        self.random_angle = False
         self.line_max = 10
         start_balls = 1
         self.speed_control = 2
@@ -178,6 +180,7 @@ class Bounce(QMainWindow):
         balli.bs = self.bs + 0
         balli.line_max = self.line_max
         balli.angle = choice(range(360)) * self.conv
+        balli.random_angle = self.random_angle
         balli.init()
         return balli
 
@@ -188,6 +191,10 @@ class Bounce(QMainWindow):
     def set_lm(self):
         for i in range(len(self.balls)):
             self.balls[i].line_max = self.line_max
+
+    def set_random(self):
+        for i in range(len(self.balls)):
+            self.balls[i].random_angle = self.random_angle
 
     def paintEvent(self, event):
 
@@ -334,6 +341,10 @@ class Control(QWidget):
         self.draw_lines.setChecked(self.gui.draw_lines)
         self.draw_lines.installEventFilter(self)
 
+        self.random = QCheckBox("Random",self)
+        self.random.setChecked(self.gui.random_angle)
+        self.random.installEventFilter(self)
+
         self.lbl3 = QLabel('Line Max:', self)
         self.sld_lm = QSlider(Qt.Horizontal, self)
         self.sld_lm.setMinimum(1)
@@ -366,13 +377,14 @@ class Control(QWidget):
         self.grid.addWidget(self.lbl2_2, row, cspan + 1, 1, 1)
 
         row += 1
-        self.grid.addWidget(self.draw_balls, row, 0, 1, 1)
-        self.grid.addWidget(self.draw_lines, row, 1, 1, cspan)
-
-        row += 1
         self.grid.addWidget(self.lbl3, row, 0, 1, 1)
         self.grid.addWidget(self.sld_lm, row, 1, 1, cspan)
         self.grid.addWidget(self.lbl3_2, row, cspan + 1, 1, 1)
+
+        row += 1
+        self.grid.addWidget(self.draw_balls, row, 0, 1, 1)
+        self.grid.addWidget(self.draw_lines, row, 1, 1, cspan)
+        self.grid.addWidget(self.random, row, cspan + 1, 1, 1)
 
         row += 1
         self.grid.addWidget(self.reset_btn, row, 0, 1, 1)
@@ -460,6 +472,9 @@ class Control(QWidget):
             self.gui.draw_balls = self.draw_balls.isChecked()
         elif source is self.draw_lines:
             self.gui.draw_lines = self.draw_lines.isChecked()
+        elif source is self.random:
+            self.gui.random_angle = self.random.isChecked()
+            self.gui.set_random()
 
         self.refresh()
 
