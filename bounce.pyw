@@ -434,6 +434,12 @@ class Control(QWidget):
 
     def change_lm(self):
         new_num = self.sld_lm.value()
+
+        if len(self.gui.balls) == 0:
+            self.gui.line_max = new_num
+            self.gui.set_lm()
+            return
+
         if new_num == self.gui.line_max:
             return
         elif new_num > self.gui.line_max or new_num > len(self.gui.balls[0].line_coords):
