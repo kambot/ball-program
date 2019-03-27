@@ -130,6 +130,8 @@ class Bounce(QMainWindow):
         self.draw_balls = True
         self.draw_lines = False
         self.random_angle = False
+        self.uniform_angles = False
+        self.angle_shift = 0
         self.line_max = 10
         start_balls = 1
         self.speed_control = 2
@@ -166,8 +168,14 @@ class Bounce(QMainWindow):
 
     def create_balls(self, num):
         # num is number to create
-        for _ in range(num):
+
+        for i in range(num):
             balli = self.create_ball()
+
+            if self.uniform_angles:
+                balli.angle = (360 / num * i + self.angle_shift) * self.conv
+                balli.trajectory()
+
             self.balls.append(balli)
         self.num_balls = len(self.balls)
 
@@ -324,6 +332,7 @@ class Control(QWidget):
         self.lbl1_2 = QLabel(str(self.gui.num_balls), self)
         self.lbl2_2 = QLabel(str(self.gui.bs), self)
         self.lbl3_2 = QLabel(str(self.gui.line_max), self)
+        self.lbl4_2 = QLabel(str(self.gui.angle_shift), self)
 
         self.lbl2 = QLabel('Speed:', self)
         self.sld_speed = QSlider(Qt.Horizontal, self)
@@ -345,6 +354,11 @@ class Control(QWidget):
         self.random.setChecked(self.gui.random_angle)
         self.random.installEventFilter(self)
 
+        self.uniform_angles = QCheckBox("Uniform Angles",self)
+        self.uniform_angles.setChecked(self.gui.uniform_angles)
+        self.uniform_angles.installEventFilter(self)
+
+
         self.lbl3 = QLabel('Line Max:', self)
         self.sld_lm = QSlider(Qt.Horizontal, self)
         self.sld_lm.setMinimum(1)
@@ -352,6 +366,14 @@ class Control(QWidget):
         self.sld_lm.setMaximumWidth(100)
         self.sld_lm.valueChanged.connect(self.change_lm)
         self.sld_lm.setValue(self.gui.line_max)
+
+        self.lbl4 = QLabel('Angle Shift:', self)
+        self.sld_shift = QSlider(Qt.Horizontal, self)
+        self.sld_shift.setMinimum(0)
+        self.sld_shift.setMaximum(360)
+        self.sld_shift.setMaximumWidth(100)
+        self.sld_shift.valueChanged.connect(self.change_shift)
+        self.sld_shift.setValue(self.gui.angle_shift)
 
         self.reset_btn = QPushButton('Reset', self)
         self.reset_btn.clicked.connect(self.reset)
@@ -384,7 +406,17 @@ class Control(QWidget):
         row += 1
         self.grid.addWidget(self.draw_balls, row, 0, 1, 1)
         self.grid.addWidget(self.draw_lines, row, 1, 1, cspan)
-        self.grid.addWidget(self.random, row, cspan + 1, 1, 1)
+        # self.grid.addWidget(self.random, row, cspan + 1, 1, 1)
+
+        row += 1
+        self.grid.addWidget(self.random, row, 0, 1, 1)
+        self.grid.addWidget(self.uniform_angles, row, 1, 1, cspan)
+
+        row += 1
+        self.grid.addWidget(self.lbl4, row, 0, 1, 1)
+        self.grid.addWidget(self.sld_shift, row, 1, 1, cspan)
+        self.grid.addWidget(self.lbl4_2, row, cspan + 1, 1, 1)
+
 
         row += 1
         self.grid.addWidget(self.reset_btn, row, 0, 1, 1)
@@ -401,11 +433,14 @@ class Control(QWidget):
         self.sld_speed.setValue(self.gui.bs)
         self.draw_balls.setChecked(self.gui.draw_balls)
         self.draw_lines.setChecked(self.gui.draw_lines)
+        self.uniform_angles.setChecked(self.gui.uniform_angles)
         self.sld_lm.setValue(self.gui.line_max)
+        self.sld_shift.setValue(self.gui.angle_shift)
 
         self.lbl1_2.setText(str(self.gui.num_balls))
         self.lbl2_2.setText(str(self.gui.bs))
         self.lbl3_2.setText(str(self.gui.line_max))
+        self.lbl4_2.setText(str(self.gui.angle_shift))
 
 
     def change_num_balls(self):
@@ -430,6 +465,10 @@ class Control(QWidget):
         self.gui.set_bs()
 
         self.lbl2_2.setText(str(self.gui.bs))
+
+    def change_shift(self):
+        self.gui.angle_shift = self.sld_shift.value()
+        self.lbl4_2.setText(str(self.gui.angle_shift))
 
 
     def change_lm(self):
@@ -465,6 +504,7 @@ class Control(QWidget):
         self.submit()
 
     def submit(self):
+        self.gui.uniform_angles = self.uniform_angles.isChecked()
         self.gui.draw_balls = self.draw_balls.isChecked()
         self.gui.draw_lines = self.draw_lines.isChecked()
         self.change_num_balls()
@@ -481,6 +521,8 @@ class Control(QWidget):
         elif source is self.random:
             self.gui.random_angle = self.random.isChecked()
             self.gui.set_random()
+        elif source is self.uniform_angles:
+            self.gui.uniform_angles = self.uniform_angles.isChecked()
 
         self.refresh()
 
