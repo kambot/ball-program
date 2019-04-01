@@ -119,6 +119,7 @@ class Bounce(QMainWindow):
 
         self.have_control = False
         self.num_balls = 0
+        self.max_balls = 1000
 
         # universal ball speed
         self.bs = 14 # move 14 pixels per time unit 
@@ -134,7 +135,7 @@ class Bounce(QMainWindow):
         self.angle_shift = 0
         self.line_max = 10
         start_balls = 1
-        self.speed_control = 2
+        # self.speed_control = 2
         # --------------------------------------
 
         self.create_balls(start_balls)
@@ -259,13 +260,22 @@ class Bounce(QMainWindow):
         QCoreApplication.instance().quit()
 
     def mousePressEvent(self, QMouseEvent):
+        if self.have_control:
+            self.control.refresh()
+
         pos = QMouseEvent.pos()
-        new_ball = self.create_ball()
-        new_ball.bx = pos.x()
-        new_ball.by = pos.y()
-        new_ball.init()
-        self.balls.append(new_ball)
-        self.num_balls += 1
+        if self.num_balls < self.max_balls:
+            new_ball = self.create_ball()
+            new_ball.bx = pos.x()
+            new_ball.by = pos.y()
+            new_ball.init()
+
+            if self.uniform_angles:
+                new_ball.angle = (self.angle_shift) * self.conv
+                new_ball.trajectory()
+
+            self.balls.append(new_ball)
+            self.num_balls += 1
 
 
     def eventFilter(self,source,event):
@@ -281,13 +291,13 @@ class Bounce(QMainWindow):
                     self.have_control = True
 
 
-            if event.key() == Qt.Key_Right:
-                self.bs += self.speed_control
-                self.set_bs()
+            # if event.key() == Qt.Key_Right:
+            #     self.bs += self.speed_control
+            #     self.set_bs()
 
-            elif event.key() == Qt.Key_Left:
-                self.bs -= self.speed_control
-                self.set_bs()
+            # elif event.key() == Qt.Key_Left:
+            #     self.bs -= self.speed_control
+            #     self.set_bs()
 
 
         return 0
@@ -324,7 +334,7 @@ class Control(QWidget):
         self.lbl1 = QLabel('Number of balls:', self)
         self.sld_num = QSlider(Qt.Horizontal, self)
         self.sld_num.setMinimum(0)
-        self.sld_num.setMaximum(1000)
+        self.sld_num.setMaximum(gui.max_balls)
         self.sld_num.setMaximumWidth(100)
         self.sld_num.valueChanged.connect(self.change_num_balls)
         self.sld_num.setValue(self.gui.num_balls)
@@ -406,7 +416,6 @@ class Control(QWidget):
         row += 1
         self.grid.addWidget(self.draw_balls, row, 0, 1, 1)
         self.grid.addWidget(self.draw_lines, row, 1, 1, cspan)
-        # self.grid.addWidget(self.random, row, cspan + 1, 1, 1)
 
         row += 1
         self.grid.addWidget(self.random, row, 0, 1, 1)
@@ -524,7 +533,6 @@ class Control(QWidget):
         elif source is self.uniform_angles:
             self.gui.uniform_angles = self.uniform_angles.isChecked()
 
-        self.refresh()
 
         return 0
 
